@@ -62,7 +62,8 @@ public:
 
 private:
 	void applyJerkLimit(const float dt);
-	matrix::Vector2f calculateDrag(matrix::Vector2f drag_coefficient, const float dt, const matrix::Vector2f &stick_xy,
+	matrix::Vector2f calculateDrag(const matrix::Vector2f &acceleration_scale, const float dt,
+				       const matrix::Vector2f &stick_xy,
 				       const matrix::Vector2f &vel_sp);
 	void applyTiltLimit(matrix::Vector2f &acceleration);
 	void lockPosition(const matrix::Vector3f &pos, const matrix::Vector2f &vel_sp_feedback, const float dt);
@@ -81,6 +82,7 @@ private:
 	DEFINE_PARAMETERS(
 		(ParamFloat<px4::params::MPC_VEL_MANUAL>) _param_mpc_vel_manual,
 		(ParamFloat<px4::params::MPC_ACC_HOR>) _param_mpc_acc_hor,
+		(ParamFloat<px4::params::MPC_ACC_HOR_MAX>) _param_mpc_acc_hor_max,
 		(ParamFloat<px4::params::MPC_JERK_MAX>) _param_mpc_jerk_max,
 		(ParamFloat<px4::params::MPC_TILTMAX_AIR>) _param_mpc_tiltmax_air
 	)

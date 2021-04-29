@@ -68,11 +68,8 @@ void StickAccelerationXY::resetAcceleration(const matrix::Vector2f &acceleration
 void StickAccelerationXY::generateSetpoints(Vector2f stick_xy, const float yaw, const float yaw_sp, const Vector3f &pos,
 		const matrix::Vector2f &vel_sp_feedback, const float dt)
 {
-	// maximum commanded acceleration and velocity
-	Vector2f acceleration_scale(_param_mpc_acc_hor.get(), _param_mpc_acc_hor.get());
-	Vector2f velocity_scale(_param_mpc_vel_manual.get(), _param_mpc_vel_manual.get());
-
-	acceleration_scale *= 2.f; // because of drag the average acceleration is half
+	// Maximum commanded acceleration
+	const Vector2f acceleration_scale = 2.f * _param_mpc_acc_hor.get() * ones<float, 2, 1>();
 
 	// Map stick input to acceleration
 	Sticks::limitStickUnitLengthXY(stick_xy);
@@ -81,7 +78,7 @@ void StickAccelerationXY::generateSetpoints(Vector2f stick_xy, const float yaw, 
 	applyJerkLimit(dt);
 
 	// Add drag to limit speed and brake again
-	Vector2f drag = calculateDrag(acceleration_scale.edivide(velocity_scale), dt, stick_xy, _velocity_setpoint);
+	Vector2f drag = calculateDrag(acceleration_scale, dt, stick_xy, _velocity_setpoint);
 
 	// Don't allow the drag to change the sign of the velocity, otherwise we might get into oscillations around 0, due
 	// to discretization
@@ -123,19 +120,22 @@ void StickAccelerationXY::applyJerkLimit(const float dt)
 	_acceleration_setpoint(1) = _acceleration_slew_rate_y.update(_acceleration_setpoint(1), dt);
 }
 
-Vector2f StickAccelerationXY::calculateDrag(Vector2f drag_coefficient, const float dt, const Vector2f &stick_xy,
-		const Vector2f &vel_sp)
+Vector2f StickAccelerationXY::calculateDrag(const Vector2f &acceleration_scale, const float dt,
+		const Vector2f &stick_xy, const Vector2f &vel_sp)
 {
+	// maximum commanded velocity
+	Vector2f velocity_scale = _param_mpc_vel_manual.get() * ones<float, 2, 1>();
+
 	_brake_boost_filter.setParameters(dt, .8f);
 
-	if (stick_xy.norm_squared() < FLT_EPSILON) {
-		_brake_boost_filter.update(math::max(2.f, sqrtf(_param_mpc_vel_manual.get())));
+	if (stick_xy.norm_squared() < FLT_EPSILON && vel_sp.norm() > FLT_EPSILON) {
+		_brake_boost_filter.update();
 
 	} else {
 		_brake_boost_filter.update(1.f);
 	}
 
-	drag_coefficient *= _brake_boost_filter.getState();
+	Vector2f drag_coefficient = acceleration_scale.edivide(velocity_scale) * _brake_boost_filter.getState();
 
 	// increase drag with sqareroot function when velocity is lower than 1m/s
 	const Vector2f velocity_with_sqrt_boost = vel_sp.unit_or_zero() * math::sqrt_linear(vel_sp.norm());
