@@ -68,6 +68,8 @@ class ParameterGroup(object):
             return "PlaneVTail"
         elif (self.name == "VTOL Duo Tailsitter"):
             return "VTOLDuoRotorTailSitter"
+        elif (self.name == "VTOL Uno Tailsitter"):
+            return "VTOLUnoRotorTailSitter"
         elif (self.name == "Standard VTOL"):
             return "VTOLPlane"
         elif (self.name == "VTOL Quad Tailsitter"):
