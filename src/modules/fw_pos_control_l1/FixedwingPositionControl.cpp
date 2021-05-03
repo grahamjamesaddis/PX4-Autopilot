@@ -373,7 +373,7 @@ FixedwingPositionControl::tecs_status_publish()
 		break;
 	}
 
-	t.altitude_sp = _tecs.hgt_setpoint_adj();
+	t.altitude_sp = _tecs.hgt_setpoint();
 	t.altitude_filtered = _tecs.vert_pos_state();
 
 	t.true_airspeed_sp = _tecs.TAS_setpoint_adj();
@@ -855,7 +855,9 @@ FixedwingPositionControl::control_position(const hrt_abstime &now, const Vector2
 						   tecs_fw_thr_max,
 						   tecs_fw_mission_throttle,
 						   false,
-						   radians(_param_fw_p_lim_min.get()));
+						   radians(_param_fw_p_lim_min.get()),
+						   _param_climbrate_target.get(),
+						   _param_sinkrate_target.get());
 
 
 		} else if (position_sp_type == position_setpoint_s::SETPOINT_TYPE_LOITER) {
@@ -912,7 +914,9 @@ FixedwingPositionControl::control_position(const hrt_abstime &now, const Vector2
 						   tecs_fw_thr_max,
 						   tecs_fw_mission_throttle,
 						   false,
-						   radians(_param_fw_p_lim_min.get()));
+						   radians(_param_fw_p_lim_min.get()),
+						   _param_climbrate_target.get(),
+						   _param_sinkrate_target.get());
 
 		} else if (position_sp_type == position_setpoint_s::SETPOINT_TYPE_LAND) {
 			control_landing(now, curr_pos, ground_speed, pos_sp_prev, pos_sp_curr);
@@ -983,6 +987,8 @@ FixedwingPositionControl::control_position(const hrt_abstime &now, const Vector2
 					   _param_fw_thr_cruise.get(),
 					   false,
 					   pitch_limit_min,
+					   _param_climbrate_target.get(),
+					   _param_sinkrate_target.get(),
 					   tecs_status_s::TECS_MODE_NORMAL);
 
 		/* heading control */
@@ -1085,6 +1091,8 @@ FixedwingPositionControl::control_position(const hrt_abstime &now, const Vector2
 					   _param_fw_thr_cruise.get(),
 					   false,
 					   pitch_limit_min,
+					   _param_climbrate_target.get(),
+					   _param_sinkrate_target.get(),
 					   tecs_status_s::TECS_MODE_NORMAL);
 
 		_att_sp.roll_body = _manual_control_setpoint.y * radians(_param_fw_man_r_max.get());
@@ -1238,6 +1246,8 @@ FixedwingPositionControl::control_takeoff(const hrt_abstime &now, const Vector2d
 					   _param_fw_thr_cruise.get(),
 					   _runway_takeoff.climbout(),
 					   radians(_runway_takeoff.getMinPitch(_takeoff_pitch_min.get(), _param_fw_p_lim_min.get())),
+					   _param_climbrate_target.get(),
+					   _param_sinkrate_target.get(),
 					   tecs_status_s::TECS_MODE_TAKEOFF);
 
 		// assign values
@@ -1309,6 +1319,8 @@ FixedwingPositionControl::control_takeoff(const hrt_abstime &now, const Vector2d
 							   _param_fw_thr_cruise.get(),
 							   true,
 							   radians(_takeoff_pitch_min.get()),
+							   _param_climbrate_target.get(),
+							   _param_sinkrate_target.get(),
 							   tecs_status_s::TECS_MODE_TAKEOFF);
 
 				/* limit roll motion to ensure enough lift */
@@ -1323,7 +1335,9 @@ FixedwingPositionControl::control_takeoff(const hrt_abstime &now, const Vector2d
 							   takeoff_throttle,
 							   _param_fw_thr_cruise.get(),
 							   false,
-							   radians(_param_fw_p_lim_min.get()));
+							   radians(_param_fw_p_lim_min.get()),
+							   _param_climbrate_target.get(),
+							   _param_sinkrate_target.get());
 			}
 
 		} else {
@@ -1539,6 +1553,8 @@ FixedwingPositionControl::control_landing(const hrt_abstime &now, const Vector2d
 					   throttle_land,
 					   false,
 					   _land_motor_lim ? radians(_param_fw_lnd_fl_pmin.get()) : radians(_param_fw_p_lim_min.get()),
+					   _param_climbrate_target.get(),
+					   _param_sinkrate_target.get(),
 					   _land_motor_lim ? tecs_status_s::TECS_MODE_LAND_THROTTLELIM : tecs_status_s::TECS_MODE_LAND);
 
 		if (!_land_noreturn_vertical) {
@@ -1606,7 +1622,9 @@ FixedwingPositionControl::control_landing(const hrt_abstime &now, const Vector2d
 					   _param_fw_thr_max.get(),
 					   _param_fw_thr_cruise.get(),
 					   false,
-					   radians(_param_fw_p_lim_min.get()));
+					   radians(_param_fw_p_lim_min.get()),
+					   _param_climbrate_target.get(),
+					   _param_sinkrate_target.get());
 	}
 }
 
@@ -1830,7 +1848,7 @@ void
 FixedwingPositionControl::tecs_update_pitch_throttle(const hrt_abstime &now, float alt_sp, float airspeed_sp,
 		float pitch_min_rad, float pitch_max_rad,
 		float throttle_min, float throttle_max, float throttle_cruise,
-		bool climbout_mode, float climbout_pitch_min_rad,
+		bool climbout_mode, float climbout_pitch_min_rad, float target_climbrate, float target_sinkrate,
 		uint8_t mode)
 {
 	const float dt = math::constrain((now - _last_tecs_update) * 1e-6f, 0.01f, 0.05f);
@@ -1931,7 +1949,8 @@ FixedwingPositionControl::tecs_update_pitch_throttle(const hrt_abstime &now, flo
 				    climbout_pitch_min_rad - radians(_param_fw_psp_off.get()),
 				    throttle_min, throttle_max, throttle_cruise,
 				    pitch_min_rad - radians(_param_fw_psp_off.get()),
-				    pitch_max_rad - radians(_param_fw_psp_off.get()));
+				    pitch_max_rad - radians(_param_fw_psp_off.get()),
+				    target_climbrate, target_sinkrate);
 
 	tecs_status_publish();
 }

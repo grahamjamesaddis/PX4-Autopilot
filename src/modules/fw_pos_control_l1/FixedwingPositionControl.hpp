@@ -345,8 +345,8 @@ private:
 	void tecs_update_pitch_throttle(const hrt_abstime &now, float alt_sp, float airspeed_sp,
 					float pitch_min_rad, float pitch_max_rad,
 					float throttle_min, float throttle_max, float throttle_cruise,
-					bool climbout_mode, float climbout_pitch_min_rad,
-					uint8_t mode = tecs_status_s::TECS_MODE_NORMAL);
+					bool climbout_mode, float climbout_pitch_min_rad, float target_climbrate,
+					float target_sinkrate, uint8_t mode = tecs_status_s::TECS_MODE_NORMAL);
 
 	DEFINE_PARAMETERS(
 
@@ -395,6 +395,8 @@ private:
 		(ParamFloat<px4::params::FW_T_STE_R_TC>) _param_ste_rate_time_const,
 		(ParamFloat<px4::params::FW_T_TAS_R_TC>) _param_tas_rate_time_const,
 		(ParamFloat<px4::params::FW_T_SEB_R_FF>) _param_seb_rate_ff,
+		(ParamFloat<px4::params::FW_T_CLIMB_R_SP>) _param_climbrate_target,
+		(ParamFloat<px4::params::FW_T_SINK_R_SP>) _param_sinkrate_target,
 
 		(ParamFloat<px4::params::FW_THR_ALT_SCL>) _param_fw_thr_alt_scl,
 		(ParamFloat<px4::params::FW_THR_CRUISE>) _param_fw_thr_cruise,
