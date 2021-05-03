@@ -128,7 +128,7 @@ set(models
 	standard_vtol
 	standard_vtol_drop
 	tailsitter
-	tailsitter_uno
+	tailsitter_duo
 	techpod
 	tiltrotor
 	typhoon_h480
