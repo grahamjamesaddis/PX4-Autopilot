@@ -1,5 +1,5 @@
-Tailsitter duo mixer
-============================
+Mixer for the gazebo tailsitter duo model
+=========================================
 
 This file defines a mixer for a generic duo tailsitter VTOL (eg TBS Caipirinha tailsitter edition). This vehicle
 has two motors in total, one attached to each wing. It also has two elevons which
@@ -30,8 +30,8 @@ Channel 6 connects to the left (port) elevon.
 
 # left elevon
 M: 2
-S: 1 0   10000   10000    0 -10000  10000
-S: 1 1   10000   10000    0 -10000  10000
+S: 1 0   -10000   -10000    0 -10000  10000
+S: 1 1   -10000   -10000    0 -10000  10000
 
 # right elevon
 M: 2
