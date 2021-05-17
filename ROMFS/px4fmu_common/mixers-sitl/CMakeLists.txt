@@ -45,4 +45,5 @@ px4_add_romfs_files(
 	uuv_x_sitl.main.mix
 	vectored6dof_sitl.main.mix
 	tiltrotor_sitl_direct.main.mix
+	tailsitter_mono.main.mix
 )

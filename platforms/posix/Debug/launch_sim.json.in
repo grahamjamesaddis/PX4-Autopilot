@@ -152,6 +152,7 @@
               "plane_lidar",
               "standard_vtol",
               "tailsitter",
+              "tailsitter_mono",
               "tiltrotor",
               "r1_rover",
               "boat"
